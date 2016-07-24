@@ -1,0 +1,10 @@
+extends layout
+
+block content
+	h2  location
+	p user form to change saved location
+		form(action="/account/location", method="post")
+			button(type="submit") Continue
+	ul
+		li
+			a(href="/account") Back

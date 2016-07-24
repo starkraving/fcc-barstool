@@ -20,7 +20,7 @@ mongoose.connect(process.env.MONGODB_URI);
 app.set('view engine', 'pug');
 app.use(bootstrapSvc.serve);
 app.use(session({
-	secret: 'Fr33C0d3C4mp##P0||5y',
+	secret: 'Fr33C0d3C4mp##b4r5t00|',
 	resave: false,
 	saveUninitialized: false
 }));
@@ -38,11 +38,11 @@ fs.readdirSync('./controllers').forEach(function (file) {
 });
 
 app.get('/', function(req, res){
-	res.render("homepage", {title:"Pollsy Homepage"});
+	res.redirect("/bars");
 });
 
 if ( mode == 'development' ) {
-	//app.use(require('./nodebuilder.js'));
+	app.use(require('nodebuilder'));
 }
 
 app.listen(process.env.PORT, function(){

@@ -1,0 +1,10 @@
+extends layout
+
+block content
+	h2  register
+	p form to sign up
+		form(action="/account/register", method="post")
+			button(type="submit") Continue
+	ul
+		li
+			a(href="/account/signin") Cancel

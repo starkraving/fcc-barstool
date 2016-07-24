@@ -1,0 +1,10 @@
+extends layout
+
+block content
+	h2  signin
+	p show login form
+		form(action="/account/signin", method="post")
+			button(type="submit") Sign in
+	ul
+		li
+			a(href="/account/register") Not a member? Sign up

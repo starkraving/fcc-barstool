@@ -1,0 +1,7 @@
+extends layout
+
+block content
+	h2  bars
+	p display a list of bars user has gone to in the past
+		form(action="/bars/:location/:bar/register", method="post")
+			button(type="submit") Going

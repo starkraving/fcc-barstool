@@ -1,0 +1,10 @@
+extends layout
+
+block content
+	h2  :location
+	p display matching bars for this location
+		form(action="/bars/:location/:bar/:register", method="post")
+			button(type="submit") Going
+	ul
+		li
+			a(href="/bars/:location/:bar") View
