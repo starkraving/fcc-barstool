@@ -1,10 +1,14 @@
 extends layout
 
 block content
-	h2  signin
-	p show login form
+	h2  Sign In
+	p Member Login form
 		form(action="/account/signin", method="post")
-			button(type="submit") Sign in
-	ul
-		li
-			a(href="/account/register") Not a member? Sign up
+			section.form-group
+				label(for="username") Username:
+				input.form-control(type="text", name="username", required)
+			section.form-group
+				label(for="password") Password:
+				input.form-control(type="password", name="password", required)
+			button.btn.btn-primary(type="submit") Sign in
+			a.btn.btn-default(href="/account/register") Not a member? Sign up

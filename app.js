@@ -42,7 +42,7 @@ app.get('/', function(req, res){
 });
 
 if ( mode == 'development' ) {
-	app.use(require('nodebuilder'));
+	//app.use(require('nodebuilder'));
 }
 
 app.listen(process.env.PORT, function(){

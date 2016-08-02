@@ -1,7 +1,10 @@
 extends layout
 
 block content
-	h2  
-	p show a form to specify a location
-		form(action="/bars", method="post")
-			button(type="submit") Search
+	h2  BarsTool - Local bars in your area
+	form(action="/bars", method="post")
+		section.form-group
+			div.input-group
+				input.form-control(name="location", placeholder="Your location:", required)
+				span.input-group-btn
+					button.btn.btn-primary Search

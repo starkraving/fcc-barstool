@@ -1,10 +1,11 @@
 extends layout
 
 block content
-	h2  location
-	p user form to change saved location
+	h2  Change Location
+	p Use the form below to change your saved location
 		form(action="/account/location", method="post")
-			button(type="submit") Continue
-	ul
-		li
-			a(href="/account") Back
+			section.form-group
+				label(for="location") Location:
+				input.form-control(type="text", name="location", value=location)
+			button.btn.btn-primary(type="submit") Continue
+			a.btn.btn-default(href="/account") Back

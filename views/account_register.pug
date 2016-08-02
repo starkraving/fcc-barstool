@@ -1,10 +1,34 @@
 extends layout
 
 block content
-	h2  register
-	p form to sign up
-		form(action="/account/register", method="post")
-			button(type="submit") Continue
-	ul
-		li
-			a(href="/account/signin") Cancel
+	h2=  title
+	p Members have quicker access to view bars in their location, or their favorite bars. Your personal information will never be shared.
+	if errors.length
+		ul.text-warning.list-group
+			each err in errors
+				li.list-group-item= err
+	form(action="/account/register", method="post")
+		fieldset
+			legend Login info
+			section.form-group
+				label(for="username") Username:
+				input.form-control(type="text", name="username", value=username, required)
+			section.form-group
+				label(for="password") Password:
+				input.form-control(type="password", name="password", value=password, required)
+			section.form-group
+				label(for="confirm") Confirm Password:
+				input.form-control(type="password", name="confirm", required)
+		fieldset
+			legend Member Info
+			section.form-group
+				label(for="firstname") First Name:
+				input.form-control(type="text", name="firstname", value=firstname, required)
+			section.form-group
+				label(for="lastname") Last Name:
+				input.form-control(type="text", name="lastname", value=lastname, required)
+			section.form-group
+				label(for="location") Location:
+				input.form-control(type="text", name="location", value=location, placeholder="City, State/Province, Country", required)
+		button.btn.btn-primary(type="submit") Continue
+		a.btn.btn-default(href="/account/signin") Cancel

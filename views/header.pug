@@ -1,8 +1,12 @@
-header
-	menu
-		h4 Global Exits
-		ul
+nav(class="navbar navbar-inverse")
+	div(class="container")
+		a(href="/", class="navbar-brand") BarsTool
+		ul(class="nav navbar-nav navbar-right")
 			li
 				a(href="/bars") Bars
-			li
-				a(href="/account/signin") Sign In
+			if sess.firstname && sess.lastname
+				li
+					a(href="/account")= sess.firstname + ' ' + sess.lastname.substr(0, 1)
+			else
+				li
+					a(href="/account/signin") Sign In

@@ -1,14 +1,13 @@
 extends layout
 
 block content
-	h2 
-	p user home
-	ul
-		li
-			a(href="/account/location") Change Location
-		li
-			a(href="/account/bars") My Bars
-		li
-			a(href="/bars/location") Search
-		li
-			a(href="/account/signout") Sign out
+	h2 Member Home
+	ul.list-group
+		li.list-group-item
+			a.btn.btn-default.full-width(href="/account/bars") List my favorite Bars
+		li.list-group-item
+			a.btn.btn-default(href="/bars/location") Search Bars in my Location
+		li.list-group-item
+			a.btn.btn-default(href="/account/location") Change my Location
+		li.list-group-item
+			a.btn.btn-default(href="/account/signout") Sign out
