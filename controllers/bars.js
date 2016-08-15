@@ -1,12 +1,12 @@
 var express = require('express');
 var router = express.Router();
-
+var yelp = require('node-yelp');
+var path = require('path');
 
 /**
  *show a form to specify a location
  */
 router.get('/', function(req, res){
-	console.log(req.session);
 	res.render("bars_", {title: "Bars", sess: req.session});
 });
 
@@ -22,7 +22,27 @@ router.post('', function(req, res){
  *display matching bars for this location
  */
 router.get('/:location', function(req, res){
-	res.render("bars_location", {title: "Bars in "+req.params.location, sess: req.session});
+	var client = yelp.createClient({
+		oauth: {
+			consumer_key: process.env.YELP_CONSUMER_KEY,
+			consumer_secret: process.env.YELP_CONSUMER_SECRET,
+			token: process.env.YELP_TOKEN,
+			token_secret: process.env.YELP_TOKEN_SECRET
+		}
+	});
+	client.search({ term: 'bar', location: req.params.location })
+		.then(function(data){
+			if ( typeof req.query.json == 'undefined' ) {
+				res.render("bars_location", {title: "Bars in "+req.params.location, sess: req.session});
+			} else {
+				res.contentType('text/JSON');
+				res.end(JSON.stringify(data));
+			}
+		})
+		.catch(function (err) {
+			res.contentType('text/JSON');
+			res.sendFile(path.resolve(__dirname+'/../views/bars.json'));
+		})
 });
 
 /**
@@ -44,7 +64,28 @@ router.post('/:location/:bar/register', function(req, res){
  *return Yelp API results of lat/long coordinates as JSON
  */
 router.get('/latlong/:lat/:long', function(req, res){
-	res.render("bars_latlong_lat_long", {title: " latlong :lat :long", sess: req.session});
+	var client = yelp.createClient({
+		oauth: {
+			consumer_key: process.env.YELP_CONSUMER_KEY,
+			consumer_secret: process.env.YELP_CONSUMER_SECRET,
+			token: process.env.YELP_TOKEN,
+			token_secret: process.env.YELP_TOKEN_SECRET
+		}
+	});
+	var latlong = [req.params.lat, req.params.long].join(',');
+	client.search({ term: 'bar', ll: latlong })
+		.then(function(data){
+			if ( typeof req.query.json == 'undefined' ) {
+				res.render("bars_latlong_lat_long", {title: " latlong :lat :long", sess: req.session});
+			} else {
+				res.contentType('text/JSON');
+				res.end(JSON.stringify(data));
+			}
+		})
+		.catch(function (err) {
+			res.contentType('text/JSON');
+			res.sendFile(path.resolve(__dirname+'/../views/bars.json'));
+		})
 });
 
 module.exports = router;

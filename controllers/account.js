@@ -74,6 +74,7 @@ router.post('/location', function(req, res){
 	} else {
 		Member.findOne({'username': req.session.username}).exec(function(err, member){
 			member.location = req.body.location;
+			req.session.location = req.body.location;
 			member.save(function(err, doc, rowsaffected){
 				res.redirect("/account");
 			});

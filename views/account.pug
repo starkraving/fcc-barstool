@@ -6,7 +6,7 @@ block content
 		li.list-group-item
 			a.btn.btn-default.full-width(href="/account/bars") List my favorite Bars
 		li.list-group-item
-			a.btn.btn-default(href="/bars/location") Search Bars in my Location
+			a.btn.btn-default(href="/bars/"+encodeURIComponent(sess.location)) Search Bars in my Location
 		li.list-group-item
 			a.btn.btn-default(href="/account/location") Change my Location
 		li.list-group-item

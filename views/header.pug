@@ -6,7 +6,7 @@ nav(class="navbar navbar-inverse")
 				a(href="/bars") Bars
 			if sess.firstname && sess.lastname
 				li
-					a(href="/account")= sess.firstname + ' ' + sess.lastname.substr(0, 1)
+					a(href="/account")= 'Welcome ' + sess.firstname + ' ' + sess.lastname.substr(0, 1)
 			else
 				li
 					a(href="/account/signin") Sign In

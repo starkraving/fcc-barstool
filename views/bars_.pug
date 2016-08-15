@@ -8,3 +8,17 @@ block content
 				input.form-control(name="location", placeholder="Your location:", required)
 				span.input-group-btn
 					button.btn.btn-primary Search
+	h3 Bars in your area
+	ul#live_area.list-group(data-ng-app="barsTool", data-ng-controller="init")
+		li.list-group-item.row(data-ng-repeat="bar in bars")
+			img.img-responsive.col-lg-2.col-sm-3(data-ng-src="{{bar.image_url}}")
+			div.col-lg-10.col-sm-9
+				h4(data-ng-bind="bar.name")
+				p(data-ng-bind="bar.snippet_text")
+				button.btn.btn-primary(data-ng-click="toggleGoing(bar.id)") Going
+				a.btn.btn-default(data-ng-href="/bars/{{location}}/{{bar.id}}") View
+
+	if sess.location
+		script(type="text/javascript")!= 'var bar_location="'+sess.location+'";'
+	script(type="text/javascript", src="/ng/angular.js")
+	script(type="text/javascript", src="/public/js/bars_.js")
