@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var yelp = require('node-yelp');
 var path = require('path');
+var MemberBar   = require('../models/memberbar.js');
 
 /**
  *show a form to specify a location
@@ -22,6 +23,10 @@ router.post('', function(req, res){
  *display matching bars for this location
  */
 router.get('/:location', function(req, res){
+	var datetime = new Date().getTime();
+	if ( !req.session.username ) {
+		req.session.username = req.params.location+'_'+datetime;
+	}
 	var client = yelp.createClient({
 		oauth: {
 			consumer_key: process.env.YELP_CONSUMER_KEY,
@@ -32,12 +37,18 @@ router.get('/:location', function(req, res){
 	});
 	client.search({ term: 'bar', location: req.params.location })
 		.then(function(data){
-			if ( typeof req.query.json == 'undefined' ) {
-				res.render("bars_location", {title: "Bars in "+req.params.location, sess: req.session});
-			} else {
-				res.contentType('text/JSON');
-				res.end(JSON.stringify(data));
-			}
+			MemberBar.find({ username : req.session.username })
+			.where('goingTS').gte(datetime - (18*60*60*1000))
+			.select('barId')
+			.exec(function(err, result){
+				data.going = result;
+				if ( typeof req.query.json == 'undefined' ) {
+					res.render("bars_location", {title: "Bars in "+req.params.location, sess: req.session});
+				} else {
+					res.contentType('text/JSON');
+					res.end(JSON.stringify(data));
+				}
+			});
 		})
 		.catch(function (err) {
 			res.contentType('text/JSON');
@@ -49,21 +60,6 @@ router.get('/:location', function(req, res){
  *display details of bar in iframe
  */
 router.get('/:location/:bar', function(req, res){
-	res.render("bars_location_bar", {title: " :location :bar", sess: req.session});
-});
-
-/**
- *register or de-register a bar for today's date
- */
-router.post('/:location/:bar/register', function(req, res){
-	
-	res.redirect("/bars/:location");
-});
-
-/**
- *return Yelp API results of lat/long coordinates as JSON
- */
-router.get('/latlong/:lat/:long', function(req, res){
 	var client = yelp.createClient({
 		oauth: {
 			consumer_key: process.env.YELP_CONSUMER_KEY,
@@ -72,15 +68,89 @@ router.get('/latlong/:lat/:long', function(req, res){
 			token_secret: process.env.YELP_TOKEN_SECRET
 		}
 	});
+	client.business(req.params.bar)
+		.then(function(data){
+			res.contentType('text/JSON');
+			res.end(JSON.stringify(data));
+		})
+		.catch(function(err){
+			res.contentType('text/JSON');
+			res.sendFile(path.resolve(__dirname+'/../views/bar.json'));
+		});
+});
+
+/**
+ *register or de-register a bar for today's date
+ */
+router.post('/:location/:bar/register', function(req, res){
+	var datetime = new Date().getTime();
+	if ( !req.session.username ) {
+		req.session.username = req.params.location+'_'+datetime;
+	}
+	MemberBar.findOne({
+			username : req.session.username, 
+			location : req.params.location, 
+			barId    : req.params.bar})
+		.where('goingTS').gte(datetime - (18*60*60*1000))
+		.exec(function(err, result){
+			if ( result ) {
+				result.remove(function(err, doc, rowsaffected){
+					if ( typeof req.query.json != 'undefined' ) {
+						res.contentType('text/JSON');
+						res.end(JSON.stringify({success: true, action: 'delete', rowsaffected: rowsaffected, going: false, datetime: datetime}));
+					} else {
+						res.redirect('/bars/'+escape(req.params.location));
+					}
+				});
+			} else {
+				var going = new MemberBar({
+					username : req.session.username,
+					location : req.params.location,
+					barId    : req.params.bar,
+					goingTS  : datetime
+				}).save(function(err, doc, rowsaffected){
+					if ( typeof req.query.json != 'undefined' ) {
+						res.contentType('text/JSON');
+						res.end(JSON.stringify({success: true, action: 'insert', rowsaffected: rowsaffected, going: true, datetime: datetime}));
+					} else {
+						res.redirect('/bars/'+escape(req.params.location));
+					}
+				});
+			}
+		});
+});
+
+/**
+ *return Yelp API results of lat/long coordinates as JSON
+ */
+router.get('/latlong/:lat/:long', function(req, res){
+	var datetime = new Date().getTime();
 	var latlong = [req.params.lat, req.params.long].join(',');
+	if ( !req.session.username ) {
+		req.session.username = latlong.replace(',', '_')+'_'+datetime;
+	}
+	var client = yelp.createClient({
+		oauth: {
+			consumer_key: process.env.YELP_CONSUMER_KEY,
+			consumer_secret: process.env.YELP_CONSUMER_SECRET,
+			token: process.env.YELP_TOKEN,
+			token_secret: process.env.YELP_TOKEN_SECRET
+		}
+	});
 	client.search({ term: 'bar', ll: latlong })
 		.then(function(data){
-			if ( typeof req.query.json == 'undefined' ) {
-				res.render("bars_latlong_lat_long", {title: " latlong :lat :long", sess: req.session});
-			} else {
-				res.contentType('text/JSON');
-				res.end(JSON.stringify(data));
-			}
+			MemberBar.find({ username : req.session.username })
+			.where('goingTS').gte(datetime - (18*60*60*1000))
+			.select('barId')
+			.exec(function(err, result){
+				data.going = result;
+				if ( typeof req.query.json == 'undefined' ) {
+					res.render("bars_latlong_lat_long", {title: " latlong :lat :long", sess: req.session});
+				} else {
+					res.contentType('text/JSON');
+					res.end(JSON.stringify(data));
+				}
+			})
 		})
 		.catch(function (err) {
 			res.contentType('text/JSON');

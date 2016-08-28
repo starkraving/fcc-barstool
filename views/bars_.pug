@@ -15,7 +15,7 @@ block content
 			div.col-lg-10.col-sm-9
 				h4(data-ng-bind="bar.name")
 				p(data-ng-bind="bar.snippet_text")
-				button.btn.btn-primary(data-ng-click="toggleGoing(bar.id)") Going
+				button.btn.btn-primary(id="toggle_{{bar.id}}", data-ng-bind="showGoing(bar.id)", data-ng-click="toggleGoing(bar.id)")
 				a.btn.btn-default(data-ng-href="/bars/{{location}}/{{bar.id}}") View
 
 	if sess.location
