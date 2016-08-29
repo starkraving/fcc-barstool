@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var yelp = require('node-yelp');
+var fs = require('fs');
 var path = require('path');
 var MemberBar   = require('../models/memberbar.js');
 
@@ -60,6 +61,28 @@ router.get('/:location', function(req, res){
  *display details of bar in iframe
  */
 router.get('/:location/:bar', function(req, res){
+	var datetime = new Date().getTime();
+	if ( !req.session.username ) {
+		req.session.username = req.params.location+'_'+datetime;
+	}
+	var handleContent = function(data){
+		MemberBar.findOne({
+			username : req.session.username, 
+			location : req.params.location, 
+			barId    : req.params.bar})
+		.where('goingTS').gte(datetime - (18*60*60*1000))
+		.exec(function(err, result){
+			if ( !err ) {
+				data.going = result;
+			}
+			if ( typeof req.query.json != 'undefined' ) {
+				res.contentType('text/JSON');
+				res.end(JSON.stringify(data));
+			} else {
+				res.render('bars_location_bar', {data: data, title: data.name, sess: req.session});
+			}
+		});
+	};
 	var client = yelp.createClient({
 		oauth: {
 			consumer_key: process.env.YELP_CONSUMER_KEY,
@@ -70,12 +93,11 @@ router.get('/:location/:bar', function(req, res){
 	});
 	client.business(req.params.bar)
 		.then(function(data){
-			res.contentType('text/JSON');
-			res.end(JSON.stringify(data));
+			handleContent(data)
 		})
 		.catch(function(err){
-			res.contentType('text/JSON');
-			res.sendFile(path.resolve(__dirname+'/../views/bar.json'));
+			var data = JSON.parse(fs.readFileSync(path.resolve(__dirname+'/../views/bar.json')));
+			handleContent(data);
 		});
 });
 
