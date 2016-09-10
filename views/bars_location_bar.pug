@@ -1,10 +1,7 @@
 extends layout
 
 block content
-	h2  :location :bar
-	p display details of bar in iframe
-		form(action="/bars/:location/:bar/register", method="post")
-			button(type="submit") Going
-	ul
-		li
-			a(href="/bars/:location") Back
+	h2= data.name
+	form(action="/bars/"+location+"/"+bar+"/register", method="post")
+		button.btn.btn-primary(type="submit")= ( data.going && 'barId' in data.going ) ? 'Going' : 'Not Going'
+		a.btn.btn-default(href="/bars/"+backURI) Back

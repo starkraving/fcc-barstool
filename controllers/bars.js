@@ -36,24 +36,39 @@ router.get('/:location', function(req, res){
 			token_secret: process.env.YELP_TOKEN_SECRET
 		}
 	});
-	client.search({ term: 'bar', location: req.params.location })
-		.then(function(data){
-			MemberBar.find({ username : req.session.username })
+	var handleData = function(data){
+		MemberBar.find({ username : req.session.username })
 			.where('goingTS').gte(datetime - (18*60*60*1000))
 			.select('barId')
 			.exec(function(err, result){
 				data.going = result;
 				if ( typeof req.query.json == 'undefined' ) {
-					res.render("bars_location", {title: "Bars in "+req.params.location, sess: req.session});
+					res.render("bars_location", {
+						title: "Bars in "+req.params.location, 
+						sess: req.session,
+						location: req.params.location,
+						data: data,
+						showGoing: function(arGoing, strBarID){
+							if ( arGoing.length === 0 ) return 'Not going';
+							var going = arGoing.filter(function(bar){
+								return ( bar.barId == strBarID );
+							});
+							return ( going.length === 0 ) ? 'Not going' : 'Going';
+						}
+					});
 				} else {
 					res.contentType('text/JSON');
 					res.end(JSON.stringify(data));
 				}
 			});
+	};
+	client.search({ term: 'bar', location: req.params.location })
+		.then(function(data){
+			handleData(data);
 		})
 		.catch(function (err) {
-			res.contentType('text/JSON');
-			res.sendFile(path.resolve(__dirname+'/../views/bars.json'));
+			var data = JSON.parse(fs.readFileSync(path.resolve(__dirname+'/../views/bars.json')));
+			handleData(data);
 		})
 });
 
@@ -61,6 +76,7 @@ router.get('/:location', function(req, res){
  *display details of bar in iframe
  */
 router.get('/:location/:bar', function(req, res){
+	console.log({location: req.params.location, bar: req.params.bar});
 	var datetime = new Date().getTime();
 	if ( !req.session.username ) {
 		req.session.username = req.params.location+'_'+datetime;
@@ -68,7 +84,6 @@ router.get('/:location/:bar', function(req, res){
 	var handleContent = function(data){
 		MemberBar.findOne({
 			username : req.session.username, 
-			location : req.params.location, 
 			barId    : req.params.bar})
 		.where('goingTS').gte(datetime - (18*60*60*1000))
 		.exec(function(err, result){
@@ -79,7 +94,16 @@ router.get('/:location/:bar', function(req, res){
 				res.contentType('text/JSON');
 				res.end(JSON.stringify(data));
 			} else {
-				res.render('bars_location_bar', {data: data, title: data.name, sess: req.session});
+				res.render('bars_location_bar', {
+					data: data, 
+					title: data.name,
+					location: req.params.location,
+					bar: req.params.bar, 
+					sess: req.session,
+					backURI: ( req.params.location.split(',').length > 1 && req.params.location.match(/^[1234567890.,-]+$/) )
+									? 'latlong/'+req.params.location.split(',').join('/') 
+									: escape(req.params.location)
+				});
 			}
 		});
 	};
@@ -109,9 +133,17 @@ router.post('/:location/:bar/register', function(req, res){
 	if ( !req.session.username ) {
 		req.session.username = req.params.location+'_'+datetime;
 	}
+	var handleRedirect = function(location) {
+		if ( location.match(/^[1234567890.,-]+$/) ) {
+			latlong = location.split(',');
+			redirectURL = '/bars/latlong/'+latlong[0]+'/'+latlong[1];
+		} else {
+			redirectURL = '/bars/'+escape(location);
+		}
+		res.redirect(redirectURL);
+	};
 	MemberBar.findOne({
 			username : req.session.username, 
-			location : req.params.location, 
 			barId    : req.params.bar})
 		.where('goingTS').gte(datetime - (18*60*60*1000))
 		.exec(function(err, result){
@@ -121,13 +153,12 @@ router.post('/:location/:bar/register', function(req, res){
 						res.contentType('text/JSON');
 						res.end(JSON.stringify({success: true, action: 'delete', rowsaffected: rowsaffected, going: false, datetime: datetime}));
 					} else {
-						res.redirect('/bars/'+escape(req.params.location));
+						handleRedirect(req.params.location);
 					}
 				});
 			} else {
 				var going = new MemberBar({
 					username : req.session.username,
-					location : req.params.location,
 					barId    : req.params.bar,
 					goingTS  : datetime
 				}).save(function(err, doc, rowsaffected){
@@ -135,7 +166,7 @@ router.post('/:location/:bar/register', function(req, res){
 						res.contentType('text/JSON');
 						res.end(JSON.stringify({success: true, action: 'insert', rowsaffected: rowsaffected, going: true, datetime: datetime}));
 					} else {
-						res.redirect('/bars/'+escape(req.params.location));
+						handleRedirect(req.params.location);
 					}
 				});
 			}
@@ -159,25 +190,41 @@ router.get('/latlong/:lat/:long', function(req, res){
 			token_secret: process.env.YELP_TOKEN_SECRET
 		}
 	});
-	client.search({ term: 'bar', ll: latlong })
-		.then(function(data){
-			MemberBar.find({ username : req.session.username })
+	var handleData = function(data){
+		MemberBar.find({ username : req.session.username })
 			.where('goingTS').gte(datetime - (18*60*60*1000))
 			.select('barId')
 			.exec(function(err, result){
 				data.going = result;
 				if ( typeof req.query.json == 'undefined' ) {
-					res.render("bars_latlong_lat_long", {title: " latlong :lat :long", sess: req.session});
+					res.render("bars_latlong_lat_long", {
+						title: "Bars in "+req.params.location, 
+						sess: req.session,
+						lat: req.params.lat,
+						long: req.params.long,
+						data: data,
+						showGoing: function(arGoing, strBarID){
+							if ( arGoing.length === 0 ) return 'Not going';
+							var going = arGoing.filter(function(bar){
+								return ( bar.barId == strBarID );
+							});
+							return ( going.length === 0 ) ? 'Not going' : 'Going';
+						}
+					});
 				} else {
 					res.contentType('text/JSON');
 					res.end(JSON.stringify(data));
 				}
-			})
+			});
+	};	
+	client.search({ term: 'bar', ll: latlong })
+		.then(function(data){
+			handleData(data);
 		})
 		.catch(function (err) {
-			res.contentType('text/JSON');
-			res.sendFile(path.resolve(__dirname+'/../views/bars.json'));
-		})
+			var data = JSON.parse(fs.readFileSync(path.resolve(__dirname+'/../views/bars.json')));
+			handleData(data);
+		});
 });
 
 module.exports = router;

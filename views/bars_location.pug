@@ -1,10 +1,14 @@
 extends layout
 
 block content
-	h2  :location
-	p display matching bars for this location
-		form(action="/bars/:location/:bar/:register", method="post")
-			button(type="submit") Going
-	ul
-		li
-			a(href="/bars/:location/:bar") View
+	h3= 'Bars in '+location
+	ul#live_area.list-group(data-ng-app="barsTool", data-ng-controller="init")
+		each bar in data.businesses
+			li.list-group-item.row
+				img.img-responsive.col-lg-2.col-sm-3(src=bar.image_url)
+				div.col-lg-10.col-sm-9
+					h4= bar.name
+					p= bar.snippet_text
+					form(action="/bars/"+location+"/"+bar.id+"/register", method="post")
+						button.btn.btn-primary(type="submit", id="toggle_"+bar.id, data-ng-click="toggleGoing("+bar.id+")")= showGoing(data.going, bar.id)
+						a.btn.btn-default(href="/bars/"+location+"/"+bar.id) View

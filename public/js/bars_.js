@@ -19,11 +19,13 @@ barsTool.controller('init', function($scope, $sce, $compile, $http){
 		$http.get(uri+'?json')
 			.then(function(result){
 				$scope.bars = result.data.businesses;
-				$scope.going = result.data.going;
+				if ( result.data.going ) {
+					$scope.going = result.data.going;
+				}
 			});
 	};
 	$scope.showGoing = function(barId) {
-		if ( $scope.going.length === 0 )return 'Not going';
+		if ( $scope.going.length === 0 ) return 'Not going';
 		var going = $scope.going.filter(function(bar){
 			return ( bar.barId == barId );
 		});
@@ -50,6 +52,8 @@ barsTool.controller('init', function($scope, $sce, $compile, $http){
 		};
 		if ( navigator.geolocation ) {
 			navigator.geolocation.getCurrentPosition(loadLatLong);
+		} else {
+			$scope.loadBars('');
 		}
 	} else {
 		$scope.loadBars(bar_location);
