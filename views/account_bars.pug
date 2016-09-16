@@ -1,7 +1,11 @@
 extends layout
 
 block content
-	h2  bars
-	p display a list of bars user has gone to in the past
-		form(action="/bars/:location/:bar/register", method="post")
-			button(type="submit") Going
+	h2 Your Favorite Bars
+	each bar in memberBars
+		li.list-group-item.row
+			h4= bar._id
+			p= 'Gone ' + bar.goingCount + ' times'
+			form(action="/bars/"+location+"/"+bar._id+"/register", method="post")
+				button.btn.btn-primary(type="submit", id="toggle_"+bar._id, data-ng-click="toggleGoing("+bar._id+")")= showGoing(going, bar._id)
+				a.btn.btn-default(href="/bars/"+location+"/"+bar._id) View

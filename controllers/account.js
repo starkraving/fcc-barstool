@@ -1,7 +1,11 @@
-var express  = require('express');
-var router   = express.Router();
-var crypto   = require('crypto');
-var Member   = require('../models/member.js');
+var express     = require('express');
+var router      = express.Router();
+var crypto      = require('crypto');
+var Member      = require('../models/member.js');
+var MemberBar   = require('../models/mw.memberbar.js');
+var auth        = require('../auth');
+
+var auth_member = auth('member', 'userRole', '/account/signin');
 
 /**
  *display a login form
@@ -20,6 +24,7 @@ router.post('/signin', function(req, res){
 			var hash = crypto.createHmac('sha512', result.pwsalt);
 			hash.update(req.body.password);
 			if ( result.pwhash == hash.digest('hex') ) {
+				req.session.userRole   = 'member';
 				req.session.username   = result.username;
 				req.session.firstname  = result.firstname;
 				req.session.lastname   = result.lastname;
@@ -35,58 +40,59 @@ router.post('/signin', function(req, res){
 /**
  *user home
  */
-router.get('', function(req, res){
-	if ( !req.session.username ) {
-		res.redirect('/account/signin');
-	} else {
-		res.render("account", {title: "Member Home", sess: req.session});
-	}
+router.get('', auth_member, function(req, res){
+	res.render("account", {title: "Member Home", sess: req.session});
 });
 
 /**
  *user form to change saved location
  */
-router.get('/location', function(req, res){
-	if ( !req.session.username ) {
-		res.redirect('/account/signin');
-	} else {
-		Member.findOne({'username': req.session.username}).exec(function(err, result){
-			var location = ( result.location ) 
-					? result.location 
-					: ( ( req.session.location ) 
-								? req.session.location 
-								: '' );
-			res.render("account_location", {
-				title    : "Change Member Location", 
-				sess     : req.session,
-				location : location
-			});
+router.get('/location', auth_member, function(req, res){
+	Member.findOne({'username': req.session.username}).exec(function(err, result){
+		var location = ( result.location ) 
+				? result.location 
+				: ( ( req.session.location ) 
+							? req.session.location 
+							: '' );
+		res.render("account_location", {
+			title    : "Change Member Location", 
+			sess     : req.session,
+			location : location
 		});
-	}
+	});
 });
 
 /**
  *update user location
  */
-router.post('/location', function(req, res){
-	if ( !req.session.username ) {
-		res.redirect('/account/signin');
-	} else {
-		Member.findOne({'username': req.session.username}).exec(function(err, member){
-			member.location = req.body.location;
-			req.session.location = req.body.location;
-			member.save(function(err, doc, rowsaffected){
-				res.redirect("/account");
-			});
+router.post('/location', auth_member, function(req, res){
+	Member.findOne({'username': req.session.username}).exec(function(err, member){
+		member.location = req.body.location;
+		req.session.location = req.body.location;
+		member.save(function(err, doc, rowsaffected){
+			res.redirect("/account");
 		});
-	}
+	});
 });
 
 /**
  *display a list of bars user has gone to in the past
  */
-router.get('/bars', function(req, res){
-	res.render("account_bars", {title: "My Bars", sess: req.session});
+router.get('/bars', auth_member, MemberBar.countByMember('memberBars'), MemberBar.going, function(req, res){
+	res.render("account_bars", {
+		title: "My Bars", 
+		sess: req.session,
+		going: res.going,
+		memberBars: res.memberBars,
+		location: req.session.location,
+		showGoing: function(arGoing, strBarID){
+			if ( arGoing.length === 0 ) return 'Not going';
+			var going = arGoing.filter(function(bar){
+				return ( bar.barId == strBarID );
+			});
+			return ( going.length === 0 ) ? 'Not going' : 'Going';
+		}
+	});
 });
 
 /**
@@ -119,7 +125,7 @@ router.get('/register', function(req, res){
 /**
  *create a user account and sign in
  */
-router.post('/register', function(req, res){
+router.post('/register', MemberBar.getByMember('tempMemberBars'), function(req, res){
 	var errors     = [],
 		password   = req.body.password,
 		confirm    = req.body.confirm,
@@ -149,6 +155,8 @@ router.post('/register', function(req, res){
 			memberInfo.pwhash = hash.digest('hex');
 
 			var member = new Member(memberInfo).save(function(err, doc, rowsaffected){
+				MemberBar.updateMember(res.tempMemberBars, memberInfo.username);
+				req.session.userRole   = 'member';
 				req.session.username   = memberInfo.username;
 				req.session.firstname  = memberInfo.firstname;
 				req.session.lastname   = memberInfo.lastname;

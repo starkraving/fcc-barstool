@@ -5,6 +5,7 @@ var memberBarSchema = new Schema({
 	username  : String,
 	location  : String,
 	barId     : String,
+	barName   : String,
 	goingTS   : Number
 });
 

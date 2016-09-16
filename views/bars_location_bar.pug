@@ -5,3 +5,5 @@ block content
 	form(action="/bars/"+location+"/"+bar+"/register", method="post")
 		button.btn.btn-primary(type="submit")= ( data.going && 'barId' in data.going ) ? 'Going' : 'Not Going'
 		a.btn.btn-default(href="/bars/"+backURI) Back
+	p 
+	iframe(width="100%", height="500", border="0", src=data.url)
