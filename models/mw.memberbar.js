@@ -1,5 +1,5 @@
 var express    = require('express');
-var MemberBar  = require('../models/memberbar.js');
+var MemberBar  = require('./memberbar.js');
 
 module.exports = {
 	getByMember: function(collectionName) {
@@ -49,13 +49,37 @@ module.exports = {
 			entry.save();
 		});
 	},
+	saveBar: function(data) {
+		var callback = ( arguments.length > 1 ) ? arguments[1] : null;
+		var bar = new MemberBar(data).save(function(err, doc, rowsaffected){
+			if ( typeof callback == 'function' ) {
+				callback();
+			}
+		});
+	},
 	going: function(req, res, next) {
 		var datetime = new Date().getTime();
+		if ( !req.session.username ) {
+			req.session.username = req.params.location+'_'+datetime;
+		}
 		MemberBar.find({ username : req.session.username })
 			.where('goingTS').gte(datetime - (18*60*60*1000))
 			.select('barId')
 			.exec(function(err, result){
 				res.going = ( err ) ? [] : result;
+				next();
+			});
+	},
+	goingByBar: function(req, res, next) {
+		var datetime = new Date().getTime();
+		if ( !req.session.username ) {
+			req.session.username = req.params.location+'_'+datetime;
+		}
+		MemberBar.findOne({ username : req.session.username, barId : req.params.bar })
+			.where('goingTS').gte(datetime - (18*60*60*1000))
+			.select('barId')
+			.exec(function(err, result){
+				res.going = ( err ) ? null : result;
 				next();
 			});
 	}

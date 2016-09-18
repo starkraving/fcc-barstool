@@ -1,7 +1,7 @@
 var express     = require('express');
 var router      = express.Router();
 var crypto      = require('crypto');
-var Member      = require('../models/member.js');
+var Member      = require('../models/mw.member.js');
 var MemberBar   = require('../models/mw.memberbar.js');
 var auth        = require('../auth');
 
@@ -17,24 +17,16 @@ router.get('/signin', function(req, res){
 /**
  *log the user
  */
-router.post('/signin', function(req, res){
-	Member.findOne({'username': req.body.username}).exec(function(err, result){
-		if ( err || !result ) { res.redirect('/account/signin'); }
-		else {
-			var hash = crypto.createHmac('sha512', result.pwsalt);
-			hash.update(req.body.password);
-			if ( result.pwhash == hash.digest('hex') ) {
-				req.session.userRole   = 'member';
-				req.session.username   = result.username;
-				req.session.firstname  = result.firstname;
-				req.session.lastname   = result.lastname;
-				req.session.location   = result.location;
-				res.redirect("/bars");
-			} else {
-				res.redirect("/account/signin");
-			}
-		}
-	});
+router.post('/signin', Member.getByLogin, function(req, res){
+	if ( !res.member ) { res.redirect('/account/signin'); }
+	else {
+		req.session.userRole   = 'member';
+		req.session.username   = res.member.username;
+		req.session.firstname  = res.member.firstname;
+		req.session.lastname   = res.member.lastname;
+		req.session.location   = res.member.location;
+		res.redirect("/bars");
+	}
 });
 
 /**
@@ -47,32 +39,28 @@ router.get('', auth_member, function(req, res){
 /**
  *user form to change saved location
  */
-router.get('/location', auth_member, function(req, res){
-	Member.findOne({'username': req.session.username}).exec(function(err, result){
-		var location = ( result.location ) 
-				? result.location 
-				: ( ( req.session.location ) 
-							? req.session.location 
-							: '' );
-		res.render("account_location", {
-			title    : "Change Member Location", 
-			sess     : req.session,
-			location : location
-		});
+router.get('/location', auth_member, Member.getByUsername, function(req, res){
+	var location = ( res.member.location ) 
+			? res.member.location 
+			: ( ( req.session.location ) 
+						? req.session.location 
+						: '' );
+	res.render("account_location", {
+		title    : "Change Member Location", 
+		sess     : req.session,
+		location : location
 	});
 });
 
 /**
  *update user location
  */
-router.post('/location', auth_member, function(req, res){
-	Member.findOne({'username': req.session.username}).exec(function(err, member){
-		member.location = req.body.location;
+router.post('/location', auth_member, Member.getByUsername, function(req, res){
 		req.session.location = req.body.location;
-		member.save(function(err, doc, rowsaffected){
+		res.member.location = req.body.location;
+		res.member.save(function(err, doc, rowsaffected){
 			res.redirect("/account");
 		});
-	});
 });
 
 /**
