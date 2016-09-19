@@ -1,22 +1,25 @@
-extends layout
+extends layout_homepage
 
 block content
-	h2  BarsTool - Local bars in your area
-	form(action="/bars", method="post")
-		section.form-group
-			div.input-group
-				input.form-control(name="location", placeholder="Your location:", required)
-				span.input-group-btn
-					button.btn.btn-primary Search
-	h3 Bars in your area
-	ul#live_area.list-group(data-ng-app="barsTool", data-ng-controller="init")
-		li.list-group-item.row(data-ng-repeat="bar in bars")
-			img.img-responsive.col-lg-2.col-sm-3(data-ng-src="{{bar.image_url}}")
-			div.col-lg-10.col-sm-9
-				h4(data-ng-bind="bar.name")
-				p(data-ng-bind="bar.snippet_text")
-				button.btn.btn-primary(id="toggle_{{bar.id}}", data-ng-bind="showGoing(bar.id)", data-ng-click="toggleGoing(bar.id)")
-				a.btn.btn-default(data-ng-href="/bars/{{location}}/{{bar.id}}") View
+	div.jumbotron#bars
+		div.container
+			h2  BarsTool - Local bars in your area
+			form(action="/bars", method="post")
+				section.form-group
+					div.input-group
+						input.form-control(name="location", placeholder="Your location:", required)
+						span.input-group-btn
+							button.btn.btn-primary Search
+	main.container
+		h3 Bars in your area
+		ul#live_area.list-group(data-ng-app="barsTool", data-ng-controller="init")
+			li.list-group-item.row(data-ng-repeat="bar in bars")
+				img.img-responsive.col-lg-2.col-sm-3(data-ng-src="{{bar.image_url}}")
+				div.col-lg-10.col-sm-9
+					h4(data-ng-bind="bar.name")
+					p(data-ng-bind="bar.snippet_text")
+					button.btn.btn-primary(id="toggle_{{bar.id}}", data-ng-bind="showGoing(bar.id)", data-ng-click="toggleGoing(bar.id)")
+					a.btn.btn-default(data-ng-href="/bars/{{location}}/{{bar.id}}") View
 
 	if sess.location
 		script(type="text/javascript")!= 'var bar_location="'+sess.location+'";'

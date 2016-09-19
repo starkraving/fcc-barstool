@@ -1,0 +1,11 @@
+.navbar {
+	margin-bottom: 0;
+}
+
+#bars {
+	background-color: #000000;
+	background-image: url(../img/bar_bg.jpg);
+	background-size: 100%;
+	background-repeat: no-repeat;
+	padding-top: 150px;
+}
