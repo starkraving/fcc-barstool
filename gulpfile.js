@@ -26,7 +26,7 @@ gulp.task('server', function() {
 gulp.task('nodebuilder', function() {
   gulp.run('server')
 
-  gulp.watch(['./app.js', './nodebuilder.js', './controllers/*.js'], function() {
+  gulp.watch(['./app.js', './nodebuilder.js', './controllers/*.js', './model/*.js'], function() {
     gulp.run('server')
   })
   
