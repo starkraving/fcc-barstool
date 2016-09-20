@@ -2,6 +2,7 @@ var express     = require('express');
 var router      = express.Router();
 var crypto      = require('crypto');
 var Member      = require('../models/mw.member.js');
+var MemberDB    = require('../models/member.js');
 var MemberBar   = require('../models/mw.memberbar.js');
 var auth        = require('../auth');
 
@@ -133,7 +134,7 @@ router.post('/register', MemberBar.getByMember('tempMemberBars'), function(req, 
 	if ( memberInfo.lastname.length === 0 ) { errors.push('Last Name is required'); }
 	if ( memberInfo.location.length === 0 ) { errors.push('Location is required'); }
 	
-	Member.findOne({'username': memberInfo.username}).exec(function(err, result){
+	MemberDB.findOne({'username': memberInfo.username}).exec(function(err, result){
 		var usernameUsed = ( memberInfo.username.length > 0 && result );
 		if ( usernameUsed ) { errors.push('Requested Username has already been taken'); }
 
@@ -142,7 +143,7 @@ router.post('/register', MemberBar.getByMember('tempMemberBars'), function(req, 
 			hash.update(password);
 			memberInfo.pwhash = hash.digest('hex');
 
-			var member = new Member(memberInfo).save(function(err, doc, rowsaffected){
+			var member = new MemberDB(memberInfo).save(function(err, doc, rowsaffected){
 				MemberBar.updateMember(res.tempMemberBars, memberInfo.username);
 				req.session.userRole   = 'member';
 				req.session.username   = memberInfo.username;
