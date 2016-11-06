@@ -11,7 +11,7 @@ module.exports = {
 				if ( result.pwhash == hash.digest('hex') ) {
 					authenticated = true;
 					res.member = result;
-					next();
+					return next();
 				}
 			}
 			res.member = null;
